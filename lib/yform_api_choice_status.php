@@ -17,8 +17,11 @@ class rex_api_choice_status extends rex_api_function
         $value = rex_request('value', 'string');
         $secret = rex_config::get('yform_field', 'choice_status_secret');
 
-        $expectedToken = hash_hmac('sha256', $data_id . $table, $secret);
-        $check = hash_equals($expectedToken, $token);
+        // PATCH (Medienfeuer): Gegenstück zum HMAC in
+        // rex_yform_value_choice_status::getToken(). Vorher password_verify
+        // (bcrypt) – Performance-Killer in Listenansichten.
+        $expected = hash_hmac('sha256', $data_id . '|' . $table, (string) $secret);
+        $check = is_string($token) && hash_equals($expected, $token);
 
         rex_response::cleanOutputBuffers();
 
