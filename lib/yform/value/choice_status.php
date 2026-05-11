@@ -64,12 +64,9 @@ class rex_yform_value_choice_status extends rex_yform_value_choice
 
     public static function getToken($data_id, $table_name)
     {
-        // PATCH (Medienfeuer): bcrypt war hier völlig fehl am Platz —
-        // ~13 ms pro Aufruf × Listen-Zeilen = sekundenlange Listenladezeiten
-        // (z.B. 900 Zeilen ≈ 12 s). HMAC-SHA256 liefert dieselbe Schutz-
-        // garantie (Token-Erzeugung erfordert das secret), ist aber <0.01 ms.
-        // Gegenstück: rex_api_choice_status::execute() (hash_equals).
-        // Achtung: Patch geht bei Update des yform_field-Addons verloren.
+        // Sign both values as a delimited string so the token is bound to the
+        // record and table name, and the '|' separator avoids ambiguities from
+        // plain concatenation.
         $secret = rex_config::get('yform_field', 'choice_status_secret');
 
         return hash_hmac('sha256', $data_id . '|' . $table_name, (string) $secret);
